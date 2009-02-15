@@ -30,6 +30,10 @@
 				TCL_VERSION_REQ, TCL_VERSION_DESIRED,
 				and TCLOO_VERSION_REQ. Added the new
 				'tests/tdbc.test' to 'make dist'.
+				Thanks to Don Porter for the bug report
+				and extensive consultation on the fix.
+				(Ticket c30670d169)
+	
 	* tests/tdbc.test:	Removed explicit check for {TCL WRONGARGS}
 				in ::errorCode, to restore 8.5 compatibility.
 	
