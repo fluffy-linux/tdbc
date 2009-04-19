@@ -2,6 +2,7 @@
 
 set ver [package require tdbc]
 
+set bindir [file normalize [file dirname [info nameofexecutable]]]
 set instdir [file normalize [file join  $::tcl_library ..]]
 set pathlist tdbc${ver}
 lappend pathlist {*}[glob -types d \
@@ -19,8 +20,16 @@ puts $f {
     package require Tk
     grid [label .l -text "Installing TDBC drivers"]
     set distdir [file dirname [info script]]
+    set bindir [file normalize [file dirname [info nameofexecutable]]]
     set instdir [file normalize [file join $::tcl_library ..]]
 }
+
+# HORRIBLE KLUDGE: Put libmysql.dll alongside tclsh.exe
+
+file copy -force [file join $bindir libmysql.dll] \
+    [file join $distdir libmysql.dll]
+puts $f {file copy -force [file join $distdir libmysql.dll] \
+    [file join $bindir libmysql.dll]}
 
 foreach dir $pathlist {
     file mkdir [file join $distdir $dir]

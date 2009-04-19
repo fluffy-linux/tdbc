@@ -25,8 +25,8 @@ To advance the version number:
     tdbcsqlite3/ChangeLog
 
 (2) Commit to fossil. Tag the release. Sync. Make a clean install of all four
-    packages inside a virgin Tcl/Tk.  Copy libmysql.dll into the tdbcmysql
-    lib directory, and install the sqlite3 package. Run tests against
+    packages inside a virgin Tcl/Tk.  Copy libmysql.dll into the tcl
+    bin directory, and install the sqlite3 package. Run tests against
     the installed version.
 
 (3) make dist
