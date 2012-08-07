@@ -1,8 +1,9 @@
-# makefile.vc --                                               -*- Makefile -*-
+#------------------------------------------------------------- -*- makefile -*-
+# makefile.vc --
 #
-# Microsoft Visual C++ makefile for use with nmake.exe v1.62+ (VC++ 5.0+)
+#	Microsoft Visual C++ makefile for use with nmake.exe v1.62+ (VC++ 5.0+)
 #
-# This makefile is based upon the Tcl 8.4 Makefile.vc and modified to 
+# This makefile is based upon the Tcl 8.6 Makefile.vc and modified to 
 # make it suitable as a general package makefile. Look for the word EDIT
 # which marks sections that may need modification. As a minumum you will
 # need to change the PROJECT, DOTVERSION and DLLOBJS variables to values
@@ -13,13 +14,10 @@
 #
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
-# Copyright (c) 2001 ActiveState Corporation.
-# Copyright (c) 2001-2002 David Gravereaux.
-# Copyright (c) 2003-2008 Pat Thoyts
-#
-#-------------------------------------------------------------------------
-# RCS: @(#)$Id$
-#-------------------------------------------------------------------------
+# Copyright (c) 2001-2005 ActiveState Corporation.
+# Copyright (c) 2001-2004 David Gravereaux.
+# Copyright (c) 2003-2008 Pat Thoyts.
+#------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR, MSVCDIR or
 # VCINSTALLDIR) or with the MS Platform SDK (MSSDK or WindowsSDKDir)
@@ -51,7 +49,7 @@ the build instructions.
 #
 # 3)  Targets are:
 #	all       -- Builds everything.
-#       <project> -- Builds the project (eg: nmake sample)
+#	<project> -- Builds the project (eg: nmake sample)
 #	test      -- Builds and runs the test suite.
 #	install   -- Installs the built binaries and libraries to $(INSTALLDIR)
 #		     in an appropriate subdirectory.
@@ -62,27 +60,27 @@ the build instructions.
 #		Sets where to install Tcl from the built binaries.
 #		C:\Progra~1\Tcl is assumed when not specified.
 #
-#	OPTS=static,msvcrt,staticpkg,nothreads,symbols,profile,loimpact,none
+#	OPTS=loimpact,msvcrt,nothreads,pdbs,profile,static,symbols,unchecked,none
 #		Sets special options for the core.  The default is for none.
 #		Any combination of the above may be used (comma separated).
 #		'none' will over-ride everything to nothing.
 #
-#		static  =  Builds a static library of the core instead of a
-#			   dll.  The shell will be static (and large), as well.
+#		loimpact = Adds a flag for how NT treats the heap to keep memory
+#			   in use, low.  This is said to impact alloc performance.
 #		msvcrt  =  Affects the static option only to switch it from
 #			   using libcmt(d) as the C runtime [by default] to
 #			   msvcrt(d). This is useful for static embedding
 #			   support.
-#		staticpkg = Affects the static option only to switch
-#			   tclshXX.exe to have the dde and reg extension linked
-#			   inside it.
 #		nothreads = Turns off multithreading support (not recommended)
-#		thrdalloc = Use the thread allocator (shared global free pool)
-#			   This is the default on threaded builds.
-#		symbols =  Adds symbols for step debugging.
-#		profile =  Adds profiling hooks.  Map file is assumed.
-#		loimpact =  Adds a flag for how NT treats the heap to keep memory
-#			   in use, low.  This is said to impact alloc performance.
+#		static  =  Builds a static library of the core instead of a
+#			   dll.  The shell will be static (and large), as well.
+#		pdbs     = Build detached symbols for release builds.
+#		profile  = Adds profiling hooks.  Map file is assumed.
+#		symbols  = Debug build. Links to the debug C runtime, disables
+#			   optimizations and creates pdb symbols files.
+#		unchecked = Allows a symbols build to not use the debug
+#			   enabled runtime (msvcrt.dll not msvcrtd.dll
+#			   or libcmt.lib not libcmtd.lib).
 #
 #	STATS=memdbg,compdbg,none
 #		Sets optional memory and bytecode compiler debugging code added
@@ -93,7 +91,16 @@ the build instructions.
 #		memdbg   = Enables the debugging memory allocator.
 #		compdbg  = Enables byte compilation logging.
 #
-#	MACHINE=(IX86|IA64|AMD64|ALPHA)
+#	CHECKS=64bit,fullwarn,nodep,none
+#		Sets special macros for checking compatability.
+#
+#		64bit    = Enable 64bit portability warnings (if available)
+#		fullwarn = Builds with full compiler and link warnings enabled.
+#			    Very verbose.
+#		nodep	 = Turns off compatability macros to ensure Tk isn't
+#			    being built with deprecated functions.
+#
+#	MACHINE=(ALPHA|AMD64|IA64|IX86)
 #		Set the machine type used for the compiler, linker, and
 #		resource compiler.  This hook is needed to tell the tools
 #		when alternate platforms are requested.  IX86 is the default
@@ -109,10 +116,6 @@ the build instructions.
 #
 #	TESTPAT=<file>
 #		Reads the tests requested to be run from this file.
-#
-#	CFG_ENCODING=encoding
-#		name of encoding for configuration information. Defaults
-#		to cp1252
 #
 # 5)  Examples:
 #
@@ -134,7 +137,6 @@ the build instructions.
 #
 #------------------------------------------------------------------------------
 #==============================================================================
-###############################################################################
 #------------------------------------------------------------------------------
 
 !if !exist("makefile.vc")
@@ -151,8 +153,8 @@ Please `cd` to its location first.
 # information is used to generate the name of the package library and
 # it's install location.
 #
-# For example, the sample extension is  going to build sample04.dll and
-# would install it into $(INSTALLDIR)\lib\sample04
+# For example, the sample extension is  going to build sample05.dll and
+# would install it into $(INSTALLDIR)\lib\sample05
 #
 # You need to specify the object files that need to be linked into your
 # binary here.
@@ -226,7 +228,7 @@ cdebug	= $(OPTIMIZATIONS)
 !else
 cdebug	=
 !endif
-!else if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
+!else if "$(MACHINE)" == "IA64"
 ### Warnings are too many, can't support warnings into errors.
 cdebug	= -Zi -Od $(DEBUGFLAGS)
 !else
@@ -235,7 +237,7 @@ cdebug	= -Zi -WX $(DEBUGFLAGS)
 
 ### Declarations common to all compiler options
 cwarn = $(WARNINGS) -D _CRT_SECURE_NO_DEPRECATE -D _CRT_NONSTDC_NO_DEPRECATE
-cflags = -nologo -c $(COMPILERFLAGS) $(cwarn) -Fp$(TMP_DIR)^\ -DMODULE_SCOPE=extern
+cflags = -nologo -c $(COMPILERFLAGS) $(cwarn) -Fp$(TMP_DIR)^\
 
 !if $(MSVCRT)
 !if $(DEBUG) && !$(UNCHECKED)
@@ -251,6 +253,8 @@ crt = -MT
 !endif
 !endif
 
+cflags = $(cflags) -DMODULE_SCOPE=extern
+
 !if !$(STATIC_BUILD)
 cflags = $(cflags) -DUSE_TCL_STUBS
 !if defined(TKSTUBLIB)
@@ -263,6 +267,7 @@ BASE_CFLAGS	= $(cflags) $(cdebug) $(crt) $(INCLUDES)
 CON_CFLAGS	= $(cflags) $(cdebug) $(crt) -DCONSOLE
 TCL_CFLAGS	= -DPACKAGE_NAME="\"$(PROJECT)\"" \
 		  -DPACKAGE_VERSION="\"$(DOTVERSION)\"" \
+		  -DBUILD_$(PROJECT) \
 		  $(BASE_CFLAGS) $(OPTDEFINES)
 
 ### Stubs files should not be compiled with -GL
@@ -313,7 +318,7 @@ baselibs  = $(baselibs) $(TKSTUBLIB)
 # Avoid 'unresolved external symbol __security_cookie' errors.
 # c.f. http://support.microsoft.com/?id=894573
 !if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
-!if $(VCVERSION) >= 1400 && $(VCVERSION) < 1500
+!if $(VCVERSION) > 1399 && $(VCVERSION) < 1500
 baselibs   = $(baselibs) bufferoverflowU.lib
 !endif
 !endif
@@ -330,13 +335,13 @@ TESTFLAGS = $(TESTFLAGS) -file $(TESTPAT)
 # Project specific targets (EDIT)
 #---------------------------------------------------------------------
 
-all:	     setup $(PROJECT)
-$(PROJECT):: setup pkgIndex $(PRJLIB)
-install:     install-binaries install-libraries install-docs
-pkgIndex:    setup $(OUT_DIR)\pkgIndex.tcl
+all:	    setup $(PROJECT)
+$(PROJECT): setup pkgIndex $(PRJLIB)
+install:    install-binaries install-libraries install-docs
+pkgIndex:   setup $(OUT_DIR)\pkgIndex.tcl
 
 !if !$(STATIC_BUILD)
-$(PROJECT)::  $(PRJSTUBLIB)
+$(PROJECT):  $(PRJSTUBLIB)
 !endif
 
 test: setup $(PROJECT)
@@ -372,7 +377,7 @@ $(PRJLIB): $(DLLOBJS)
 $**
 <<
 !else
-	$(link32) $(dlllflags) -base:0x10C40000 -out:$@ $(baselibs) @<<
+	$(link32) $(dlllflags) -base:@$(COFFBASE),tdbc -out:$@ $(baselibs) @<<
 $**
 <<
 	$(_VC_MANIFEST_EMBED_DLL)
@@ -403,7 +408,7 @@ $<
 
 {$(WINDIR)}.rc{$(TMP_DIR)}.res:
 	$(rc32) -fo $@ -r -i "$(GENERICDIR)" -D__WIN32__ \
-		-DCOMMAVERSION=$(DOTVERSION:.=,),0,0 \
+		-DCOMMAVERSION=$(DOTVERSION:.=,),0 \
 		-DDOTVERSION=\"$(DOTVERSION)\" \
 		-DVERSION=\"$(VERSION)$(SUFX)\" \
 !if $(DEBUG)

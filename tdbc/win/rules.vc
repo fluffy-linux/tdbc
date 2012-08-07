@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# Copyright (c) 2001-2002 David Gravereaux.
+# Copyright (c) 2001-2003 David Gravereaux.
 # Copyright (c) 2003-2008 Patrick Thoyts
 #------------------------------------------------------------------------------
 
@@ -218,12 +218,11 @@ LINKERFLAGS     =-ltcg
 STATIC_BUILD	= 0
 TCL_THREADS	= 1
 DEBUG		= 0
+SYMBOLS		= 0
 PROFILE		= 0
+PGO		= 0
 MSVCRT		= 0
 LOIMPACT	= 0
-TCL_USE_STATIC_PACKAGES	= 0
-USE_THREAD_ALLOC = 1
-USE_THREAD_STORAGE = 1
 UNCHECKED       = 0
 !else
 !if [nmakehlp -f $(OPTS) "static"]
@@ -238,12 +237,6 @@ MSVCRT		= 1
 !else
 MSVCRT		= 0
 !endif
-!if [nmakehlp -f $(OPTS) "staticpkg"]
-!message *** Doing staticpkg
-TCL_USE_STATIC_PACKAGES	= 1
-!else
-TCL_USE_STATIC_PACKAGES	= 0
-!endif
 !if [nmakehlp -f $(OPTS) "nothreads"]
 !message *** Compile explicitly for non-threaded tcl
 TCL_THREADS	= 0
@@ -256,29 +249,32 @@ DEBUG		= 1
 !else
 DEBUG		= 0
 !endif
+!if [nmakehlp -f $(OPTS) "pdbs"]
+!message *** Doing pdbs
+SYMBOLS		= 1
+!else
+SYMBOLS		= 0
+!endif
 !if [nmakehlp -f $(OPTS) "profile"]
 !message *** Doing profile
 PROFILE		= 1
 !else
 PROFILE		= 0
 !endif
+!if [nmakehlp -f $(OPTS) "pgi"]
+!message *** Doing profile guided optimization instrumentation
+PGO		= 1
+!elseif [nmakehlp -f $(OPTS) "pgo"]
+!message *** Doing profile guided optimization
+PGO		= 2
+!else
+PGO		= 0
+!endif
 !if [nmakehlp -f $(OPTS) "loimpact"]
 !message *** Doing loimpact
 LOIMPACT	= 1
 !else
 LOIMPACT	= 0
-!endif
-!if [nmakehlp -f $(OPTS) "thrdalloc"]
-!message *** Doing thrdalloc
-USE_THREAD_ALLOC = 1
-!else
-USE_THREAD_ALLOC = 0
-!endif
-!if [nmakehlp -f $(OPTS) "thrdstorage"]
-!message *** Doing thrdstorage
-USE_THREAD_STORAGE = 1
-!else
-USE_THREAD_STORAGE = 0
 !endif
 !if [nmakehlp -f $(OPTS) "unchecked"]
 !message *** Doing unchecked
@@ -420,6 +416,24 @@ WARNINGS		    = $(WARNINGS) -Wp64
 !endif
 !endif
 
+!if $(PGO) > 1
+!if [nmakehlp -l -ltcg:pgoptimize]
+LINKERFLAGS	= $(LINKERFLAGS:-ltcg=) -ltcg:pgoptimize
+!else
+MSG=^
+This compiler does not support profile guided optimization.
+!error $(MSG)
+!endif
+!elseif $(PGO) > 0
+!if [nmakehlp -l -ltcg:pginstrument]
+LINKERFLAGS	= $(LINKERFLAGS:-ltcg=) -ltcg:pginstrument
+!else
+MSG=^
+This compiler does not support profile guided optimization.
+!error $(MSG)
+!endif
+!endif
+
 #----------------------------------------------------------
 # Set our defines now armed with our options.
 #----------------------------------------------------------
@@ -434,12 +448,6 @@ OPTDEFINES	= $(OPTDEFINES) -DTCL_COMPILE_DEBUG -DTCL_COMPILE_STATS
 !endif
 !if $(TCL_THREADS)
 OPTDEFINES	= $(OPTDEFINES) -DTCL_THREADS=1
-!if $(USE_THREAD_ALLOC)
-OPTDEFINES	= $(OPTDEFINES) -DUSE_THREAD_ALLOC=1
-!endif
-!if $(USE_THREAD_STORAGE)
-OPTDEFINES	= $(OPTDEFINES) -DUSE_THREAD_STORAGE=1
-!endif
 !endif
 !if $(STATIC_BUILD)
 OPTDEFINES	= $(OPTDEFINES) -DSTATIC_BUILD
@@ -461,15 +469,12 @@ OPTDEFINES	= $(OPTDEFINES) -DTCL_CFG_PROFILED
 OPTDEFINES	= $(OPTDEFINES) -DTCL_CFG_DO64BIT
 !endif
 
+
 #----------------------------------------------------------
-# Locate the Tcl headers to build against
+# Get common info used when building extensions.
 #----------------------------------------------------------
 
-!if "$(PROJECT)" == "tcl"
-
-_TCL_H          = ..\generic\tcl.h
-
-!else
+!if "$(PROJECT)" != "tcl"
 
 # If INSTALLDIR set to tcl root dir then reset to the lib dir.
 !if exist("$(_INSTALLDIR)\include\tcl.h")
@@ -564,8 +569,6 @@ TCLSH           = "$(_TCLBINDIR)\tclsh$(TCL_VERSION)t$(SUFX).exe"
 TCLSTUBLIB	= "$(_TCLDIR)\lib\tclstub$(TCL_VERSION).lib"
 TCLIMPLIB	= "$(_TCLDIR)\lib\tcl$(TCL_VERSION)$(SUFX).lib"
 TCL_LIBRARY	= $(_TCLDIR)\lib
-TCLREGLIB	= "$(_TCLDIR)\lib\tclreg11$(SUFX:t=).lib"
-TCLDDELIB	= "$(_TCLDIR)\lib\tcldde12$(SUFX:t=).lib"
 COFFBASE	= \must\have\tcl\sources\to\build\this\target
 TCLTOOLSDIR	= \must\have\tcl\sources\to\build\this\target
 TCL_INCLUDES    = -I"$(_TCLDIR)\include"
@@ -578,8 +581,6 @@ TCLSH		= "$(_TCLBINDIR)\tclsh$(TCL_VERSION)t$(SUFX).exe"
 TCLSTUBLIB	= "$(_TCLDIR)\win\$(BUILDDIRTOP)\tclstub$(TCL_VERSION).lib"
 TCLIMPLIB	= "$(_TCLDIR)\win\$(BUILDDIRTOP)\tcl$(TCL_VERSION)$(SUFX).lib"
 TCL_LIBRARY	= $(_TCLDIR)\library
-TCLREGLIB	= "$(_TCLDIR)\win\$(BUILDDIRTOP)\tclreg11$(SUFX:t=).lib"
-TCLDDELIB	= "$(_TCLDIR)\win\$(BUILDDIRTOP)\tcldde12$(SUFX:t=).lib"
 COFFBASE	= "$(_TCLDIR)\win\coffbase.txt"
 TCLTOOLSDIR	= $(_TCLDIR)\tools
 TCL_INCLUDES	= -I"$(_TCLDIR)\generic" -I"$(_TCLDIR)\win"
@@ -587,13 +588,9 @@ TCL_INCLUDES	= -I"$(_TCLDIR)\generic" -I"$(_TCLDIR)\win"
 
 !endif
 
-#-------------------------------------------------------------------------
-# Locate the Tk headers to build against
-#-------------------------------------------------------------------------
-
-!if "$(PROJECT)" == "tk"
-_TK_H          = ..\generic\tk.h
-!endif
+#----------------------------------------------------------
+# Optionally check for Tk info for building extensions.
+#----------------------------------------------------------
 
 !ifdef PROJECT_REQUIRES_TK
 !if !defined(TKDIR)
