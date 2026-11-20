@@ -2,7 +2,7 @@ README: tdbc
 
     This is the 1.1.15 source distribution of Tcl Database Connectivity
     (TDBC). TDBC is available from a Fossil version control repository
-    at http://tdbc.tcl.tk/ .
+    at https://core.tcl-lang.org/tdbc/ .
 
 RCS: @(#) $Id$
 
@@ -12,7 +12,7 @@ This directory contains the source code, documentation, and test scripts
 for the base classes and SQL tokenizer of Tcl Database Connectivity. It
 is not very useful by itself; to access databases, you also need one
 or more driver modules for the database manager(s) that you intend to use.
-The drivers are available from http://tdbc.tcl.tk along with the
+The drivers are available from https://core.tcl-lang.org/tdbc along with the
 source code of this module. A bug database and Wiki are available
 at the same location.
 
@@ -41,7 +41,7 @@ enter the commands:
     make install
 
 to have the TDBC base classes and tokenizer installed and usable from
-Tcl.  See http://www.tcl.tk/doc/howto/compile.html for instructions on
+Tcl.  See https://www.tcl-lang.org/doc/howto/compile.html for instructions on
 how to set up a build environment for Tcl.
 
 4. Tcl newsgroup.
@@ -55,7 +55,7 @@ see the "Support and bug fixes" section below.
 
 A Wiki-based open community site covering all aspects of Tcl/Tk is at:
 
-	http://wiki.tcl.tk/
+	https://wiki.tcl-lang.org/
 
 It is dedicated to the Tcl programming language and its extensions.  A
 wealth of useful information can be found there.  It contains code
@@ -78,7 +78,7 @@ We are very interested in receiving bug reports, patches, and suggestions
 for improvements.  We prefer that you send this information to us via the
 bug database, rather than emailing us directly.  The bug database is at:
 
-	http://tdbc.tcl.tk/
+	https://core.tcl-lang.org/tdbc
 
 The bug form was designed to give uniform structure to bug reports as
 well as to solicit enough information to minimize followup questions.

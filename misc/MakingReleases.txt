@@ -79,7 +79,7 @@ To advance the version number:
     Result is a /tmp/dist/tdbc${VERSION}-doc directory containing the
     HTML manual.
 
-(8) Sync with tdbc.tcl.tk
+(8) Sync with https://core.tcl-lang.org/tdbc
 
 (9) Make win32 and doc ZIPS and upload to
     https://frs.sourceforge.net/webupload
